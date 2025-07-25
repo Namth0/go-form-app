@@ -1,0 +1,252 @@
+/* === Thèmes de base === */
+body.generali-light {
+    background: #f8f9fa;
+    color: #b5121b;
+}
+
+body.generali-dark {
+    background: #1a1a1a;
+    color: #fff;
+}
+
+/* === Header === */
+.generali-title {
+    color: #b5121b;
+    font-weight: bold;
+}
+
+body.generali-dark .generali-title {
+    color: #ff6b7a;
+}
+
+.generali-logo {
+    max-width: 120px;
+    height: auto;
+    filter: brightness(1);
+    transition: filter 0.3s ease;
+}
+
+body.generali-dark .generali-logo {
+    filter: brightness(1.2);
+}
+
+/* === Boutons === */
+.generali-btn {
+    background-color: #b5121b;
+    color: #fff;
+    border: none;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.generali-btn:hover, .generali-btn:focus {
+    background-color: #8e1015;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(181, 18, 27, 0.3);
+}
+
+body.generali-dark .generali-btn {
+    background-color: #ff6b7a;
+    color: #1a1a1a;
+}
+
+body.generali-dark .generali-btn:hover, 
+body.generali-dark .generali-btn:focus {
+    background-color: #b5121b;
+    color: #fff;
+}
+
+/* === Formulaires === */
+.form-control:focus, .form-select:focus {
+    border-color: #b5121b;
+    box-shadow: 0 0 0 0.2rem rgba(181,18,27,.25);
+}
+
+.form-control.is-valid {
+    border-color: #198754;
+    background-image: none;
+}
+
+.form-control.is-invalid {
+    border-color: #dc3545;
+    background-image: none;
+}
+
+body.generali-dark .form-control, 
+body.generali-dark .form-select {
+    background: #2d2d2d;
+    color: #fff;
+    border-color: #404040;
+}
+
+body.generali-dark .form-control:focus, 
+body.generali-dark .form-select:focus {
+    border-color: #ff6b7a;
+    box-shadow: 0 0 0 0.2rem rgba(255, 107, 122, 0.25);
+    background: #2d2d2d;
+}
+
+body.generali-dark .form-control.is-valid {
+    border-color: #198754;
+    background: #2d2d2d;
+}
+
+body.generali-dark .form-control.is-invalid {
+    border-color: #dc3545;
+    background: #2d2d2d;
+}
+
+/* === Cards === */
+.card {
+    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
+}
+
+body.generali-dark .card {
+    background: #2d2d2d;
+    color: #fff;
+}
+
+body.generali-dark .card-header {
+    background: #404040;
+    border-bottom-color: #555;
+}
+
+/* === Logs d'activité === */
+.activity-logs {
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 0.9em;
+}
+
+.log-entry {
+    background: rgba(0,0,0,0.02);
+    border-radius: 0.375rem;
+    transition: background-color 0.2s ease;
+}
+
+.log-entry:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+body.generali-dark .log-entry {
+    background: rgba(255,255,255,0.05);
+}
+
+body.generali-dark .log-entry:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* === Script Output === */
+.script-output {
+    max-height: 200px;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    font-family: 'Courier New', monospace;
+}
+
+body.generali-dark .script-output {
+    background: #1e1e1e;
+    color: #fff;
+}
+
+/* === Scrollbars === */
+.activity-logs::-webkit-scrollbar,
+.script-output::-webkit-scrollbar {
+    width: 6px;
+}
+
+.activity-logs::-webkit-scrollbar-track,
+.script-output::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.activity-logs::-webkit-scrollbar-thumb,
+.script-output::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.activity-logs::-webkit-scrollbar-thumb:hover,
+.script-output::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+body.generali-dark .activity-logs::-webkit-scrollbar-track,
+body.generali-dark .script-output::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+body.generali-dark .activity-logs::-webkit-scrollbar-thumb,
+body.generali-dark .script-output::-webkit-scrollbar-thumb {
+    background: #555;
+}
+
+body.generali-dark .activity-logs::-webkit-scrollbar-thumb:hover,
+body.generali-dark .script-output::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+/* === Animations === */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.log-entry {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* === Status Alerts === */
+.alert {
+    border: none;
+    border-radius: 0.5rem;
+}
+
+.alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    color: #155724;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+    color: #721c24;
+}
+
+body.generali-dark .alert-success {
+    background: linear-gradient(135deg, #1e4d3a 0%, #155724 100%);
+    color: #d4edda;
+}
+
+body.generali-dark .alert-danger {
+    background: linear-gradient(135deg, #4d1e24 0%, #721c24 100%);
+    color: #f8d7da;
+}
+
+/* === Responsive === */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    
+    .activity-logs {
+        max-height: 200px;
+    }
+    
+    .script-output {
+        max-height: 150px;
+    }
+} 
