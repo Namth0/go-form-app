@@ -1,0 +1,58 @@
+# Version obsolète mais maintenue pour compatibilité
+# version: '3.8'
+
+services:
+  go-form-app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: go-form-app
+    ports:
+      - "8001:8001"
+    environment:
+      - PORT=8001
+      - GO_ENV=development
+    volumes:
+      # Monter les scripts pour le développement (optionnel)
+      - ../internal/scripts:/internal/scripts:ro
+      # Monter les templates pour le développement (optionnel)
+      - ../cmd/server/http/web:/cmd/server/http/web:ro
+    restart: unless-stopped
+    networks:
+      - go-form-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "--method=GET", "http://localhost:8001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=100m
+
+  # Service Nginx optionnel pour le reverse proxy en production
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: go-form-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - go-form-app
+    restart: unless-stopped
+    networks:
+      - go-form-network
+    profiles:
+      - production
+
+networks:
+  go-form-network:
+    driver: bridge
+
+# Volumes pour la persistance (si nécessaire)
+volumes:
+  app_data:
+    driver: local

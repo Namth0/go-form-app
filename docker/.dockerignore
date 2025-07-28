@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+
+# IDE/Editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+main
+
+# Test files
+*_test.go
+**/testdata
+
+# Temporary files
+*.tmp
+*.temp
+
+# Dependencies
+vendor/
+
+# Logs
+*.log
+
+# Other Docker files (to avoid recursion)
+docker/
+Dockerfile*
+docker-compose*.yml 
