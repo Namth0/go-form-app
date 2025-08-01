@@ -12,19 +12,16 @@ import (
 // 2. Essaie le port 8001 par défaut
 // 3. Si occupé, cherche un port libre dans la plage 8001-8015
 func FindAvailablePort() (string, error) {
-	// Configuration du port depuis l'environnement
 	port := os.Getenv("PORT")
 	if port != "" {
 		return port, nil
 	}
 
-	// Tentative d'utiliser le port 8001 par défaut
 	port = "8001"
 	if isPortAvailable(port) {
 		return port, nil
 	}
 
-	// Si le port 8001 est pris, chercher un port libre dans la plage 8001-8015
 	for i := 0; i < 15; i++ {
 		tryPort := 8001 + rand.Intn(15)
 		portStr := strconv.Itoa(tryPort)
@@ -36,7 +33,6 @@ func FindAvailablePort() (string, error) {
 	return "", ErrNoPortAvailable
 }
 
-// isPortAvailable vérifie si un port est disponible
 func isPortAvailable(port string) bool {
 	addr := ":" + port
 	ln, err := net.Listen("tcp", addr)
@@ -55,6 +51,7 @@ type PortError struct {
 	message string
 }
 
+// Error implémente l'interface error
 func (e *PortError) Error() string {
 	return e.message
 }

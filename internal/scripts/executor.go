@@ -62,7 +62,6 @@ func NewExecutor(scriptsDir string, maxExecutionTime time.Duration, allowedScrip
 func (e *Executor) Execute(ctx context.Context, req ExecutionRequest) (*ExecutionResult, error) {
 	startTime := time.Now()
 
-	// Validation de sécurité
 	if err := e.validateRequest(req); err != nil {
 		e.logger.Printf("SECURITY: Request validation failed: %v", err)
 		return &ExecutionResult{
@@ -73,14 +72,10 @@ func (e *Executor) Execute(ctx context.Context, req ExecutionRequest) (*Executio
 		}, err
 	}
 
-	// Détection du type de script
 	scriptType := e.detectScriptType(req.Script)
 	interpreter := e.getInterpreterCommand(scriptType)
-
-	// Construction du chemin sécurisé basé sur le type
 	scriptPath := e.getScriptPath(req.Script, scriptType)
 
-	// Vérification finale que le fichier existe et est dans le bon répertoire
 	if !e.isScriptPathSafe(scriptPath) {
 		err := fmt.Errorf("script path is not safe: %s", scriptPath)
 		e.logger.Printf("SECURITY: %v", err)
@@ -92,24 +87,17 @@ func (e *Executor) Execute(ctx context.Context, req ExecutionRequest) (*Executio
 		}, err
 	}
 
-	// Création du contexte avec timeout
 	execCtx, cancel := context.WithTimeout(ctx, e.maxExecutionTime)
 	defer cancel()
 
-	// Préparation des arguments sécurisés selon le type de script
 	args := e.prepareScriptArgs(scriptType, scriptPath, req.UserID)
 	args = append(args, req.Arguments...)
 
-	// Log de l'exécution
 	e.logger.Printf("EXECUTION: Starting %s script %s for user %s", scriptType, req.Script, req.UserID)
 
-	// Exécution du script avec isolation
 	cmd := exec.CommandContext(execCtx, interpreter, args...)
-
-	// Isolation de l'environnement
 	cmd.Env = e.buildSecureEnvironment()
 
-	// Capture de la sortie avec gestion UTF-8
 	output, err := cmd.CombinedOutput()
 
 	duration := time.Since(startTime)
@@ -136,12 +124,10 @@ func (e *Executor) Execute(ctx context.Context, req ExecutionRequest) (*Executio
 
 // validateRequest valide la demande d'exécution
 func (e *Executor) validateRequest(req ExecutionRequest) error {
-	// Validation de l'ID utilisateur
 	if !e.userIDPattern.MatchString(req.UserID) {
 		return fmt.Errorf("invalid user ID format: %s", req.UserID)
 	}
 
-	// Validation du script contre la whitelist
 	scriptAllowed := false
 	for _, allowed := range e.allowedScripts {
 		if req.Script == allowed {
@@ -154,14 +140,12 @@ func (e *Executor) validateRequest(req ExecutionRequest) error {
 		return fmt.Errorf("script not in whitelist: %s", req.Script)
 	}
 
-	// Validation contre path traversal
 	if strings.Contains(req.Script, "..") ||
 		strings.Contains(req.Script, "/") ||
 		strings.Contains(req.Script, "\\") {
 		return fmt.Errorf("invalid characters in script name: %s", req.Script)
 	}
 
-	// Validation des arguments (pas d'injection de commandes)
 	for _, arg := range req.Arguments {
 		if e.containsDangerousPatterns(arg) {
 			return fmt.Errorf("dangerous pattern detected in argument: %s", arg)
@@ -173,24 +157,20 @@ func (e *Executor) validateRequest(req ExecutionRequest) error {
 
 // isScriptPathSafe vérifie que le chemin du script est sécurisé
 func (e *Executor) isScriptPathSafe(scriptPath string) bool {
-	// Résolution du chemin absolu
 	absPath, err := filepath.Abs(scriptPath)
 	if err != nil {
 		return false
 	}
 
-	// Résolution du répertoire des scripts
 	absScriptsDir, err := filepath.Abs(e.scriptsDir)
 	if err != nil {
 		return false
 	}
 
-	// Vérification que le script est bien dans le répertoire autorisé
 	if !strings.HasPrefix(absPath, absScriptsDir) {
 		return false
 	}
 
-	// Vérification que le fichier existe
 	if _, err := os.Stat(absPath); os.IsNotExist(err) {
 		return false
 	}
@@ -200,32 +180,26 @@ func (e *Executor) isScriptPathSafe(scriptPath string) bool {
 
 // buildSecureEnvironment construit un environnement d'exécution sécurisé
 func (e *Executor) buildSecureEnvironment() []string {
-	// Environnement minimal et sécurisé avec support UTF-8 universel
 	env := []string{
 		"HOME=/tmp",
 		"USER=scriptrunner",
 		"SHELL=/bin/false",
-		// UTF-8 encoding pour tous les systèmes
 		"LANG=C.UTF-8",
 		"LC_ALL=C.UTF-8",
 		"LANGUAGE=C.UTF-8",
 		"LC_CTYPE=C.UTF-8",
-		// Python specific
 		"PYTHONIOENCODING=utf-8",
 		"PYTHONUNBUFFERED=1",
 	}
 
-	// Détection du système d'exploitation
 	isWindows := len(os.Getenv("OS")) > 0 && strings.Contains(strings.ToLower(os.Getenv("OS")), "windows")
 
 	if isWindows {
-		// Configuration pour Windows
 		env = append(env,
 			"PATH=C:\\Windows\\System32;C:\\Windows;C:\\Program Files\\Python39;C:\\Program Files\\Python39\\Scripts",
 			"PYTHONLEGACYWINDOWSSTDIO=0",
 		)
 	} else {
-		// Configuration pour Unix/Linux/macOS
 		env = append(env,
 			"PATH=/usr/local/bin:/usr/bin:/bin",
 		)
@@ -256,15 +230,7 @@ func (e *Executor) containsDangerousPatterns(arg string) bool {
 
 // decodeUTF8Output décode correctement la sortie UTF-8 des scripts Python
 func (e *Executor) decodeUTF8Output(output []byte) string {
-	// Conversion directe en string, Go gère automatiquement UTF-8
-	result := string(output)
-
-	// Log de debug pour vérifier l'encodage
-	if e.logger != nil {
-		e.logger.Printf("DEBUG: Output bytes length: %d, string length: %d", len(output), len(result))
-	}
-
-	return result
+	return string(output)
 }
 
 // detectScriptType détecte le type de script basé sur l'extension
@@ -277,7 +243,6 @@ func (e *Executor) detectScriptType(scriptName string) ScriptType {
 		return ScriptTypeZsh
 	}
 
-	// Par défaut, considérer comme Python pour compatibilité
 	return ScriptTypePython
 }
 
@@ -317,13 +282,10 @@ func (e *Executor) getScriptPath(scriptName string, scriptType ScriptType) strin
 func (e *Executor) prepareScriptArgs(scriptType ScriptType, scriptPath, userID string) []string {
 	switch scriptType {
 	case ScriptTypePython:
-		// -u pour unbuffered output en Python
 		return []string{"-u", scriptPath, userID}
 	case ScriptTypeBash:
-		// Pour Bash, exécution directe
 		return []string{scriptPath, userID}
 	case ScriptTypeZsh:
-		// Pour Zsh, exécution directe
 		return []string{scriptPath, userID}
 	default:
 		return []string{scriptPath, userID}

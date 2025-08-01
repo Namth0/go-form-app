@@ -35,17 +35,13 @@ type Handlers struct {
 func NewHandlers(logger *log.Logger) *Handlers {
 	security := SecurityConfig{
 		AllowedScripts: []string{
-			// Scripts Python
 			"script1.py",
 			"script2.py",
-			// Scripts Bash
 			"script1.sh",
-			// Scripts Zsh
 			"script1.zsh",
-			// Whitelist stricte des scripts autorisés
 		},
 		MaxExecutionTime: 30 * time.Second,
-		UserIDPattern:    regexp.MustCompile(`^[a-zA-Z0-9]{7,12}$`), // Strict pattern pour SSOGF
+		UserIDPattern:    regexp.MustCompile(`^[a-zA-Z0-9]{7,12}$`),
 		ScriptsDir:       "internal/scripts",
 	}
 
@@ -71,7 +67,6 @@ func (h *Handlers) FormHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Générer un token CSRF sécurisé
 	csrfToken, err := generateSecureCSRFToken()
 	if err != nil {
 		h.logger.Printf("CSRF token generation failed: %v", err)
@@ -87,7 +82,6 @@ func (h *Handlers) FormHandler(w http.ResponseWriter, r *http.Request) {
 		AllowedScripts: h.security.AllowedScripts,
 	}
 
-	// Exécution sécurisée du template
 	h.executeTemplate(w, "cmd/server/http/web/templates/form.html", data)
 }
 
@@ -99,10 +93,7 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse form avec limite de taille
 	r.Body = http.MaxBytesReader(w, r.Body, 1048576) // 1MB max
-
-	// Parser le formulaire multipart si nécessaire
 	contentType := r.Header.Get("Content-Type")
 	if strings.Contains(contentType, "multipart/form-data") {
 		if err := r.ParseMultipartForm(1048576); err != nil {
@@ -118,7 +109,6 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Validation CSRF - vérifier dans les headers ET dans le form
 	csrfToken := strings.TrimSpace(r.Header.Get("X-CSRF-Token"))
 	if csrfToken == "" {
 		csrfToken = strings.TrimSpace(r.FormValue("csrf_token"))
@@ -129,21 +119,8 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 		h.sendJSONError(w, "Token CSRF manquant", http.StatusBadRequest)
 		return
 	}
-
-	// TODO: Validation temporelle du token CSRF (pour une sécurité optimale)
-	// Pour l'instant, on accepte tout token non-vide
-
-	// Validation stricte des inputs
 	userID := strings.TrimSpace(r.FormValue("userId"))
 	script := strings.TrimSpace(r.FormValue("script"))
-
-	// Debug: afficher toutes les données reçues
-	h.logger.Printf("DEBUG: All form values received:")
-	for key, values := range r.Form {
-		h.logger.Printf("DEBUG: %s = %v", key, values)
-	}
-	h.logger.Printf("DEBUG: Raw userID from form: '%s'", r.FormValue("userId"))
-	h.logger.Printf("DEBUG: Raw script from form: '%s'", r.FormValue("script"))
 
 	if !h.validateUserID(userID) {
 		h.logSecurityEvent(r, "invalid_user_id", userID)
@@ -157,11 +134,8 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Log de l'action avant exécution
 	h.logSecurityEvent(r, "script_execution_request",
 		fmt.Sprintf("user:%s script:%s", userID, script))
-
-	// Exécution sécurisée du script
 	ctx := context.Background()
 	req := scripts.ExecutionRequest{
 		UserID: userID,
@@ -175,7 +149,6 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retourner le résultat
 	response := map[string]interface{}{
 		"status":   "success",
 		"message":  "Script exécuté avec succès",
@@ -198,7 +171,6 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Log du résultat
 	h.logSecurityEvent(r, "script_execution_completed",
 		fmt.Sprintf("user:%s script:%s success:%t duration:%v exit_code:%d",
 			userID, script, result.Success, result.Duration, result.ExitCode))
@@ -209,17 +181,10 @@ func (h *Handlers) RunScriptHandler(w http.ResponseWriter, r *http.Request) {
 // validateUserID valide le format de l'ID utilisateur
 func (h *Handlers) validateUserID(userID string) bool {
 	if userID == "" {
-		h.logger.Printf("DEBUG: Empty userID")
 		return false
 	}
 
-	// Debug: afficher ce qu'on valide
-	h.logger.Printf("DEBUG: Validating userID: '%s' (length: %d)", userID, len(userID))
-
-	isValid := h.security.UserIDPattern.MatchString(userID)
-	h.logger.Printf("DEBUG: Pattern match result: %t (pattern: %s)", isValid, h.security.UserIDPattern.String())
-
-	return isValid
+	return h.security.UserIDPattern.MatchString(userID)
 }
 
 // validateScript vérifie que le script est dans la whitelist
@@ -228,10 +193,8 @@ func (h *Handlers) validateScript(script string) bool {
 		return false
 	}
 
-	// Vérifier contre la whitelist
 	for _, allowed := range h.security.AllowedScripts {
 		if script == allowed {
-			// Vérifier aussi que le nom ne contient pas de path traversal
 			if strings.Contains(script, "..") || strings.Contains(script, "/") || strings.Contains(script, "\\") {
 				return false
 			}
@@ -273,7 +236,6 @@ func (h *Handlers) logSecurityEvent(r *http.Request, eventType, details string) 
 
 // getClientIP récupère l'IP réelle du client
 func getClientIP(r *http.Request) string {
-	// Vérifier les headers de proxy
 	forwarded := r.Header.Get("X-Forwarded-For")
 	if forwarded != "" {
 		return strings.Split(forwarded, ",")[0]
@@ -307,8 +269,6 @@ func (h *Handlers) executeTemplate(w http.ResponseWriter, templatePath string, d
 
 	if err := tmpl.Execute(w, data); err != nil {
 		h.logger.Printf("Template execution error: %v", err)
-		// Ne pas appeler http.Error si les headers sont déjà envoyés
-		// La connexion est probablement fermée côté client
 		return
 	}
 }

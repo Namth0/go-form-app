@@ -185,7 +185,6 @@
 
             activityLogs.insertBefore(logEntry, activityLogs.firstChild);
             
-            // Limiter à 50 logs
             const logs = activityLogs.querySelectorAll('.log-entry');
             if (logs.length > 50) {
                 logs[logs.length - 1].remove();
@@ -375,7 +374,6 @@
             `;
         }
 
-        // Log initial
         addLog('info', 'Application chargée', 'Interface prête pour l\'exécution de scripts');
     </script>
 </body>

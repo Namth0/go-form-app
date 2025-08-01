@@ -8,13 +8,11 @@ import (
 )
 
 func main() {
-	// Recherche d'un port disponible
 	port, err := utils.FindAvailablePort()
 	if err != nil {
 		log.Fatalf("Erreur lors de la recherche de port: %v", err)
 	}
 
-	// Création et démarrage du serveur sécurisé
 	server := httpserver.NewServer()
 
 	log.Printf("Starting Go Form App on port %s", port)
